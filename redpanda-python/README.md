@@ -26,3 +26,24 @@ Pídele al profesor el servidor Kafka, el mecanismo SASL, el usuario, la contras
 Si el profesor ya creó el topic, empieza por `producer.py`. Los tres scripts usan `KAFKA_TOPIC` de `.env` para apuntar al mismo topic.
 
 El consumidor de esta práctica empieza en el primer offset disponible y no guarda su avance. Si lo vuelves a ejecutar, puede volver a leer los mensajes. Termina después de 60 segundos sin recibir mensajes.
+
+## Sesión 12 · Aviationstack → Redpanda
+
+El productor consulta `/v1/flights`, transforma los campos al formato del taller y publica un array JSON por consulta. Los vuelos sin datos de posición quedan con coordenadas nulas. Cada ejecución hace una sola consulta a la API.
+
+En tu `.env` existente, agrega `AVIATIONSTACK_ACCESS_KEY` con tu clave y, si usas otro topic, `AVIATION_KAFKA_TOPIC` con su nombre. Conserva tus credenciales Kafka. El topic por defecto es `aviationstack-topic`.
+
+```powershell
+# Consulta la API y muestra cinco vuelos sin usar Kafka
+.\venv\Scripts\python.exe aviation_producer.py --preview
+
+# Publica la consulta del taller para vuelos activos con destino Barcelona
+.\venv\Scripts\python.exe aviation_producer.py --active --arrival BCN
+
+# Lee los lotes del topic y muestra un vuelo JSON por línea
+.\venv\Scripts\python.exe aviation_consumer.py
+```
+
+Si el filtro de Barcelona devuelve cero vuelos, ejecuta el productor sin filtros. Para crear el topic si aún no existe y tienes permisos, ejecuta `admin.py` con `KAFKA_TOPIC` apuntando al mismo nombre que `AVIATION_KAFKA_TOPIC`. El consumidor de consola vuelve a leer desde el inicio disponible y termina tras 15 segundos de inactividad.
+
+Los tres scripts de `integracion-con-redpanda` crean, escriben y leen el topic configurado en `KAFKA_TOPIC`. En `aviation-stack-realtime`, el primer script ejecuta el productor de Aviationstack y el segundo guarda los lotes en MySQL. Para probar MySQL, instala las dependencias actualizadas, ejecuta `ddl_vuelos.sql` en tu base y completa las variables `AVIATION_MYSQL_*` en `.env`. Si el proceso se interrumpe después de guardar en MySQL y antes de confirmar el offset en Kafka, un lote podría volver a insertarse al reiniciar.
