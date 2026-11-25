@@ -53,3 +53,30 @@ Los tres scripts de `integracion-con-redpanda` crean, escriben y leen el topic c
 Abre `Kafka-withSpark.ipynb` en un kernel con Spark, el conector Kafka y soporte S3A de versiones compatibles. Establece `KAFKA_BOOTSTRAP_SERVERS`, `KAFKA_USERNAME` y `KAFKA_PASSWORD` en el entorno del kernel. Usa tu perfil o rol de AWS para dar al runtime acceso de lectura y escritura a tus rutas S3. Configura `AVIATION_S3_OUTPUT_PATH` y `AVIATION_S3_CHECKPOINT_PATH` como rutas `s3a://` distintas y conserva el mismo checkpoint al reiniciar el flujo.
 
 El notebook guarda cada lote JSON como una fila Parquet con sus metadatos Kafka. En una consulta nueva, `latest` lee los mensajes publicados después de empezar. Configura `AVIATION_SPARK_STARTING_OFFSETS=earliest` para empezar desde los mensajes retenidos cuando uses un checkpoint nuevo.
+
+### Procesamiento por lotes y streaming en Spark
+
+| API | Cómo procesa los datos | Ejemplo en la sesión 12 |
+| --- | --- | --- |
+| `spark.read` | Lee un conjunto finito. Una acción, como `count()`, ejecuta el trabajo y devuelve el resultado. | Leer los archivos Parquet ya guardados en S3 para revisar los lotes publicados. |
+| `spark.readStream` | Define una fuente de streaming. La consulta comienza con `writeStream.start()` y procesa las llegadas de forma incremental, por defecto en microlotes. | Consumir los mensajes de `aviationstack-topic` en Redpanda y escribirlos en Parquet en S3. |
+
+```mermaid
+flowchart LR
+    A["Redpanda · aviationstack-topic"] --> B["Spark · readStream"]
+    B --> C["S3 · Parquet Bronze"]
+    B --> D["Checkpoint en S3"]
+    C --> E["Spark · read"]
+    E --> F["Consulta histórica"]
+```
+
+Cuando el notebook haya escrito archivos en S3, puedes contar los mensajes guardados con una lectura por lotes. Cada fila corresponde a un mensaje de Kafka que puede contener varios vuelos.
+
+```python
+lotes = spark.read.parquet(output_path)
+print(lotes.count())
+```
+
+El checkpoint guarda el progreso de la consulta de streaming para que pueda retomarlo al reiniciar. Delta Lake es un destino que se puede usar en Databricks. En este repositorio, el notebook de la práctica escribe en Parquet.
+
+[Guía de Structured Streaming de Apache Spark](https://spark.apache.org/docs/latest/streaming/getting-started.html)
