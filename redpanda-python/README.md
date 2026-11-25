@@ -27,6 +27,8 @@ Si el profesor ya creó el topic, empieza por `producer.py`. Los tres scripts us
 
 El consumidor de esta práctica empieza en el primer offset disponible y no guarda su avance. Si lo vuelves a ejecutar, puede volver a leer los mensajes. Termina después de 60 segundos sin recibir mensajes.
 
+Para comprobar el recorrido de la sesión 11, verifica que productor y consumidor usen el mismo `KAFKA_TOPIC`. El productor muestra el topic, la partición y el offset de cada envío. Busca esos mismos offsets en la salida del consumidor.
+
 ## Sesión 12 · Aviationstack → Redpanda
 
 El productor consulta `/v1/flights`, transforma los campos al formato del taller y publica un array JSON por consulta. Los vuelos sin datos de posición quedan con coordenadas nulas. Cada ejecución hace una sola consulta a la API.
@@ -47,6 +49,22 @@ En tu `.env` existente, agrega `AVIATIONSTACK_ACCESS_KEY` con tu clave y, si usa
 Si el filtro de Barcelona devuelve cero vuelos, ejecuta el productor sin filtros. Para crear el topic si aún no existe y tienes permisos, ejecuta `admin.py` con `KAFKA_TOPIC` apuntando al mismo nombre que `AVIATION_KAFKA_TOPIC`. El consumidor de consola vuelve a leer desde el inicio disponible y termina tras 15 segundos de inactividad.
 
 Los tres scripts de `integracion-con-redpanda` crean, escriben y leen el topic configurado en `KAFKA_TOPIC`. En `aviation-stack-realtime`, el primer script ejecuta el productor de Aviationstack y el segundo guarda los lotes en MySQL. Para probar MySQL, instala las dependencias actualizadas, ejecuta `ddl_vuelos.sql` en tu base y completa las variables `AVIATION_MYSQL_*` en `.env`. Si el proceso se interrumpe después de guardar en MySQL y antes de confirmar el offset en Kafka, un lote podría volver a insertarse al reiniciar.
+
+### Prueba de Aviationstack a MySQL desde Colab
+
+1. Consulta Aviationstack por HTTPS y revisa cuántos vuelos devolvió. Los filtros del taller son `flight_status=active` y `arr_iata=BCN`. Guarda la clave de la API y las contraseñas en **Secretos** de Colab.
+2. Publica el array JSON en `aviationstack-topic`. Espera la respuesta de `producer.send(...).get(timeout=20)` y registra el offset. En una prueba de la clase, Kafka confirmó un mensaje con 94 vuelos en la partición 0, offset 3.
+3. Consume el mismo topic con `group_id="grupo-vuelos"` y `enable_auto_commit=False`. Guarda el lote completo en MySQL, confirma la transacción y después confirma el siguiente offset en Kafka.
+4. Verifica las filas guardadas con `SELECT COUNT(*) FROM vuelos;`. En una tabla que ya tiene datos, compara el conteo de antes y después de ejecutar el consumidor.
+
+| Recurso en Redpanda | Permiso del taller |
+| --- | --- |
+| Topic `aviationstack-topic` | `Write` para publicar y `Read` para consumir |
+| Consumer Group `grupo-vuelos` | `Read` para unirse al grupo y confirmar el avance |
+
+- `TopicAuthorizationFailedError` indica que debes revisar el permiso sobre el topic exacto usado por el script.
+- `GroupAuthorizationFailedError` indica que debes revisar el permiso sobre el nombre exacto de `group_id`.
+- Si Kafka devuelve `ClusterAuthorizationFailedError` al inicializar un productor idempotente en Colab, el ejercicio usó `enable_idempotence=False` con `kafka-python` 3.x para publicar con la ACL del topic. En ese modo, un reintento puede producir duplicados.
 
 ### Spark y S3
 
