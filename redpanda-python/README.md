@@ -47,3 +47,9 @@ En tu `.env` existente, agrega `AVIATIONSTACK_ACCESS_KEY` con tu clave y, si usa
 Si el filtro de Barcelona devuelve cero vuelos, ejecuta el productor sin filtros. Para crear el topic si aún no existe y tienes permisos, ejecuta `admin.py` con `KAFKA_TOPIC` apuntando al mismo nombre que `AVIATION_KAFKA_TOPIC`. El consumidor de consola vuelve a leer desde el inicio disponible y termina tras 15 segundos de inactividad.
 
 Los tres scripts de `integracion-con-redpanda` crean, escriben y leen el topic configurado en `KAFKA_TOPIC`. En `aviation-stack-realtime`, el primer script ejecuta el productor de Aviationstack y el segundo guarda los lotes en MySQL. Para probar MySQL, instala las dependencias actualizadas, ejecuta `ddl_vuelos.sql` en tu base y completa las variables `AVIATION_MYSQL_*` en `.env`. Si el proceso se interrumpe después de guardar en MySQL y antes de confirmar el offset en Kafka, un lote podría volver a insertarse al reiniciar.
+
+### Spark y S3
+
+Abre `Kafka-withSpark.ipynb` en un kernel con Spark, el conector Kafka y soporte S3A de versiones compatibles. Establece `KAFKA_BOOTSTRAP_SERVERS`, `KAFKA_USERNAME` y `KAFKA_PASSWORD` en el entorno del kernel. Usa tu perfil o rol de AWS para dar al runtime acceso de lectura y escritura a tus rutas S3. Configura `AVIATION_S3_OUTPUT_PATH` y `AVIATION_S3_CHECKPOINT_PATH` como rutas `s3a://` distintas y conserva el mismo checkpoint al reiniciar el flujo.
+
+El notebook guarda cada lote JSON como una fila Parquet con sus metadatos Kafka. En una consulta nueva, `latest` lee los mensajes publicados después de empezar. Configura `AVIATION_SPARK_STARTING_OFFSETS=earliest` para empezar desde los mensajes retenidos cuando uses un checkpoint nuevo.
