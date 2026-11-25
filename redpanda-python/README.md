@@ -95,6 +95,27 @@ lotes = spark.read.parquet(output_path)
 print(lotes.count())
 ```
 
-El checkpoint guarda el progreso de la consulta de streaming para que pueda retomarlo al reiniciar. Delta Lake es un destino que se puede usar en Databricks. En este repositorio, el notebook de la práctica escribe en Parquet.
+El checkpoint guarda el progreso de la consulta de streaming para que pueda retomarlo al reiniciar. El notebook de S3 escribe archivos Parquet. El notebook de Databricks escribe en una tabla Delta.
 
 [Guía de Structured Streaming de Apache Spark](https://spark.apache.org/docs/latest/streaming/getting-started.html)
+
+### Databricks y Delta Lake
+
+El notebook [Python_12.ipynb](databricks/Python_12.ipynb) adapta el ejercicio `SparkWithKafka-24112026` a `aviationstack-topic` y escribe en `workspace.bronze.vuelos`. Este flujo lee de Redpanda directamente. El consumidor MySQL y el notebook Parquet de S3 son otros destinos del mismo topic.
+
+1. Importa el notebook en Databricks y usa un entorno con Spark, Kafka y Delta Lake. El cómputo debe poder conectarse al broker por el puerto 9092.
+2. Configura un ámbito de secretos, por defecto `aviationstack`, con las claves `kafka-bootstrap-servers`, `kafka-username` y `kafka-password`. El usuario Kafka necesita acceso de lectura al topic.
+3. Verifica que existan el catálogo `workspace` y el esquema `bronze`. Usa un volumen de Unity Catalog con permiso de escritura para el checkpoint. El widget `checkpoint_path` trae como ejemplo `/Volumes/workspace/bronze/checkpoints/aviationstack-vuelos`.
+4. Ejecuta las celdas en orden. `availableNow=True` procesa los registros disponibles y termina. `earliest` se usa al iniciar con un checkpoint nuevo. Las siguientes ejecuciones deben reutilizar el mismo checkpoint para continuar desde el último avance.
+
+El notebook conserva el JSON original, la partición, el offset y la posición del vuelo dentro de su lote. Genera un identificador determinista a partir de esos metadatos. Como la salida usa `append`, empezar con un checkpoint nuevo sobre la misma tabla puede volver a insertar registros.
+
+```sql
+SELECT kafka_partition, kafka_offset, COUNT(*) AS vuelos
+FROM workspace.bronze.vuelos
+GROUP BY kafka_partition, kafka_offset
+ORDER BY kafka_offset DESC
+LIMIT 10;
+```
+
+[Kafka en Databricks](https://docs.databricks.com/aws/en/connect/streaming/kafka/) · [Checkpoints de Structured Streaming](https://docs.databricks.com/aws/en/structured-streaming/checkpoints) · [Trigger AvailableNow](https://docs.databricks.com/aws/en/structured-streaming/triggers)

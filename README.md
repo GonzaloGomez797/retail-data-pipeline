@@ -6,7 +6,7 @@ Soy Gonzalo Gómez. Aquí reúno un proyecto de procesamiento por lotes y dos pr
 | --- | --- | --- |
 | [Retail Data Pipeline](#retail-data-pipeline) | Generación de pedidos sintéticos, validación, deduplicación y métricas de ventas y entregas. | Python, DuckDB, SQL |
 | [Sesión 11 · Kafka con Redpanda](redpanda-python/README.md#clase-11--redpanda-con-python) | Creación de un topic, publicación de mensajes y lectura por partición y offset. | Python, Kafka, Redpanda |
-| [Sesión 12 · Streaming de vuelos](redpanda-python/README.md#sesión-12--aviationstack--redpanda) | Consulta de vuelos en Aviationstack y publicación en Redpanda, verificada desde Colab. Incluye un consumidor MySQL y un notebook de Spark para S3. | Aviationstack, Python, Redpanda, MySQL, Spark, S3 |
+| [Sesión 12 · Streaming de vuelos](redpanda-python/README.md#sesión-12--aviationstack--redpanda) | Consulta de vuelos en Aviationstack y publicación en Redpanda, verificada desde Colab. Incluye consumo hacia MySQL, Parquet en S3 y una tabla Bronze en Databricks. | Aviationstack, Python, Redpanda, MySQL, Spark, Databricks, Delta Lake, S3 |
 
 ## Retail Data Pipeline
 
