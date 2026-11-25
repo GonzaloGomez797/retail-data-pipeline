@@ -1,4 +1,14 @@
-# Retail Data Pipeline
+# Portafolio de Ingeniería de Datos
+
+Soy Gonzalo Gómez. Aquí reúno un proyecto de procesamiento por lotes y dos prácticas de streaming desarrolladas durante mi formación en Ingeniería de Datos.
+
+| Proyecto | Qué puedes revisar | Herramientas |
+| --- | --- | --- |
+| [Retail Data Pipeline](#retail-data-pipeline) | Generación de pedidos sintéticos, validación, deduplicación y métricas de ventas y entregas. | Python, DuckDB, SQL |
+| [Sesión 11 · Kafka con Redpanda](redpanda-python/README.md#clase-11--redpanda-con-python) | Creación de un topic, publicación de mensajes y lectura por partición y offset. | Python, Kafka, Redpanda |
+| [Sesión 12 · Streaming de vuelos](redpanda-python/README.md#sesión-12--aviationstack--redpanda) | Consulta de vuelos en Aviationstack y publicación en Redpanda, verificada desde Colab. Incluye un consumidor MySQL y un notebook de Spark para S3. | Aviationstack, Python, Redpanda, MySQL, Spark, S3 |
+
+## Retail Data Pipeline
 
 Pipeline de ingeniería de datos para un e-commerce ficticio. Genera pedidos sintéticos, registra los motivos de rechazo y calcula ventas y puntualidad de entregas con Python y DuckDB SQL. Todos los montos se expresan en soles peruanos (PEN).
 
@@ -12,7 +22,7 @@ flowchart LR
     E --> G[Ventas y entregas]
 ```
 
-## Ejecutar en Windows
+### Ejecutar en Windows
 
 Desde la raíz del repositorio, con Python 3.12 disponible en PowerShell:
 
@@ -26,7 +36,7 @@ $retailPython = "$env:LOCALAPPDATA/retail-pipeline-venv/Scripts/python.exe"
 
 La ubicación de salida del ejemplo mantiene el CSV y la base fuera de OneDrive. Si omites `--output`, la salida se guarda en `.data`, excluida de Git. Usa una carpeta de salida distinta para cada ejecución simultánea.
 
-## Datos y resultados
+### Datos y resultados
 
 El grano es un registro por pedido válido. El generador cubre 180 días desde el 1 de enero de 2025 y recrea los mismos pedidos con la misma semilla. Cada 20 pedidos incorpora una copia exacta y cada 25 introduce un registro adicional sin cantidad. Con 1.000 pedidos, el resultado esperado es 1.090 filas de entrada, 1.000 aceptadas, 50 duplicadas y 40 rechazadas por cantidad inválida.
 
